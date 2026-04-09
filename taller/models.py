@@ -8,11 +8,10 @@ from decimal import Decimal
 # ==========================================
 class Configuracion(models.Model):
     nombre_taller = models.CharField(max_length=150, default="Taller Juárez")
-    porcentaje_iva_actual = models.DecimalField(max_digits=4, decimal_places=2, default=Decimal('0.16'), help_text="Ejemplo: 0.16 para 16%, 0.21 para 21%")
+    # CAMBIO UX: Ahora pide 16, 21, 10.5, etc.
+    porcentaje_iva_actual = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('16.00'), help_text="Porcentaje de IVA (Ejemplo: 16 para 16%, 21 para 21%)")
 
     def save(self, *args, **kwargs):
-        # Truco Singleton: Forzamos a que el ID siempre sea 1. 
-        # Así el Admin sobreescribe la misma fila siempre y nunca crea duplicados.
         self.pk = 1 
         super().save(*args, **kwargs)
 
@@ -24,12 +23,12 @@ class Configuracion(models.Model):
         verbose_name_plural = "Configuraciones"
 
 def obtener_iva_vigente():
-    """Busca el IVA en la configuración. Si la tabla no existe aún, devuelve 0.16 por seguridad"""
     try:
         config = Configuracion.objects.first()
-        return config.porcentaje_iva_actual if config else Decimal('0.16')
+        # CAMBIO UX: Valor por defecto ahora es 16.00
+        return config.porcentaje_iva_actual if config else Decimal('16.00')
     except Exception:
-        return Decimal('0.16')
+        return Decimal('16.00')
 
 # ==========================================
 # MODELOS DEL NEGOCIO
@@ -85,8 +84,8 @@ class Servicio(models.Model):
     costo_refacciones_neto = models.DecimalField(max_digits=10, decimal_places=2, default=0, editable=False)
     subtotal_neto = models.DecimalField(max_digits=10, decimal_places=2, default=0, editable=False)
     
-    # ¡MAGIA AQUÍ! El valor por defecto llama a la función que lee la base de datos
-    porcentaje_iva_aplicado = models.DecimalField(max_digits=4, decimal_places=2, default=obtener_iva_vigente)
+    # CAMBIO UX: Guarda el valor entero (ej: 16.00)
+    porcentaje_iva_aplicado = models.DecimalField(max_digits=5, decimal_places=2, default=obtener_iva_vigente)
     
     iva_total = models.DecimalField(max_digits=10, decimal_places=2, default=0, editable=False)
     gran_total = models.DecimalField(max_digits=10, decimal_places=2, default=0, editable=False)
@@ -100,7 +99,9 @@ class Servicio(models.Model):
         )
         self.costo_refacciones_neto = total_refacciones
         self.subtotal_neto = self.costo_mano_obra_neto + self.costo_refacciones_neto
-        self.iva_total = self.subtotal_neto * self.porcentaje_iva_aplicado
+        
+        # CAMBIO UX (MAGIA MATEMÁTICA): Dividimos por 100 aquí mismo
+        self.iva_total = self.subtotal_neto * (self.porcentaje_iva_aplicado / Decimal('100'))
         self.gran_total = self.subtotal_neto + self.iva_total
         
         self.save(update_fields=[

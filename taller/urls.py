@@ -15,4 +15,8 @@ urlpatterns = [
     
     # Ruta de Métricas
     path('metricas/', views.metricas, name='metricas'),
+
+    # Rutas PWA (Progressive Web App)
+    path('manifest.json', views.manifest_json, name='manifest'),
+    path('sw.js', views.service_worker, name='sw'),
 ]

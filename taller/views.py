@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse
 from django.db.models import Count, Sum
 from .models import Servicio, Refaccion, DetalleRefaccion, Mecanico
 from .forms import ServicioForm, RefaccionForm, DetalleRefaccionForm
+from .utils import generar_pdf_y_enviar_correo
 
 def dashboard(request):
     servicios = Servicio.objects.all().order_by('-creado_el')
@@ -49,47 +51,77 @@ def detalle_servicio(request, servicio_id):
     error_stock = None
     
     if request.method == 'POST':
-        if 'cambiar_estado' in request.POST:
+        # ACCIÓN: Cambio de estado mediante botones individuales
+        if 'nuevo_estado' in request.POST:
             nuevo_estado = request.POST.get('nuevo_estado')
+            estado_anterior = servicio.estado
+            
             if nuevo_estado in dict(Servicio.ESTADOS).keys():
                 servicio.estado = nuevo_estado
                 servicio.save(update_fields=['estado'])
+                
+                # Si el nuevo estado es Terminado, disparamos el PDF y Mail
+                if nuevo_estado == 'Terminado' and estado_anterior != 'Terminado':
+                    mail_base = servicio.auto.cliente.email
+                    nombre_identificador = servicio.auto.cliente.nombre.replace(' ', '').lower()
+                    
+                    if mail_base and "@" in mail_base:
+                        partes = mail_base.split("@")
+                        correo_dinamico = f"{partes[0]}+{nombre_identificador}@{partes[1]}"
+                        try:
+                            generar_pdf_y_enviar_correo(servicio, correo_dinamico)
+                        except Exception as e:
+                            print(f"DEBUG Error Email: {e}")
+                
                 return redirect('taller:detalle_servicio', servicio_id=servicio.id)
                 
+        # ACCIÓN: Agregar refacciones al ticket
         elif 'agregar_refaccion' in request.POST:
             form_detalle = DetalleRefaccionForm(request.POST)
             if form_detalle.is_valid():
                 detalle = form_detalle.save(commit=False)
                 refaccion = detalle.refaccion
-                cantidad = detalle.cantidad
-                
-                if cantidad <= refaccion.stock:
+                if detalle.cantidad <= refaccion.stock:
                     detalle.servicio = servicio
                     detalle.precio_unitario_neto = refaccion.precio_neto
                     detalle.save() 
-                    
-                    refaccion.stock -= cantidad
+                    refaccion.stock -= detalle.cantidad
                     refaccion.save(update_fields=['stock'])
                     return redirect('taller:detalle_servicio', servicio_id=servicio.id)
                 else:
-                    error_stock = f"Stock insuficiente. Solo quedan {refaccion.stock} de {refaccion.nombre}."
+                    error_stock = f"Stock insuficiente. Quedan {refaccion.stock} unidades."
 
     contexto = {
         'servicio': servicio,
-        'estados_disponibles': [estado[0] for estado in Servicio.ESTADOS],
         'form_detalle': form_detalle,
         'error_stock': error_stock,
     }
     return render(request, 'taller/detalle_servicio.html', contexto)
 
 def metricas(request):
-    # Agrupamos los datos por mecánico para no tener que calcular a mano
     mecanicos = Mecanico.objects.annotate(
         total_servicios=Count('servicios'),
         recaudacion_total=Sum('servicios__gran_total')
     ).order_by('-total_servicios')
+    return render(request, 'taller/metricas.html', {'mecanicos': mecanicos})
 
-    contexto = {
-        'mecanicos': mecanicos
-    }
-    return render(request, 'taller/metricas.html', contexto)
+def manifest_json(request):
+    manifest = """{
+        "name": "Taller Juárez",
+        "short_name": "Taller",
+        "start_url": "/",
+        "display": "standalone",
+        "background_color": "#f8f9fa",
+        "theme_color": "#212529"
+    }"""
+    return HttpResponse(manifest, content_type="application/json")
+
+def service_worker(request):
+    sw = """
+    self.addEventListener('install', (e) => {
+        console.log('[PWA] Instalada');
+    });
+    self.addEventListener('fetch', (e) => {
+    });
+    """
+    return HttpResponse(sw, content_type="application/javascript")

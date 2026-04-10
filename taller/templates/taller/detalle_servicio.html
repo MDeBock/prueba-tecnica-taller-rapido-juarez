@@ -1,162 +1,125 @@
 {% extends 'taller/base.html' %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12 d-flex justify-content-between align-items-center">
-        <h2>Detalle del Ticket #{{ servicio.id }}</h2>
-        <a href="{% url 'taller:dashboard' %}" class="btn btn-outline-secondary">Volver al Panel</a>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-8 col-12 mb-4">
-        
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-dark text-white">
-                <h5 class="mb-0">Información del Vehículo y Cliente</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-sm-6 mb-3">
-                        <p class="text-muted mb-1">Vehículo</p>
-                        <h5 class="mb-0">{{ servicio.auto.marca }} {{ servicio.auto.modelo }} ({{ servicio.auto.anio }})</h5>
-                        <p class="mb-0"><strong>Placa:</strong> {{ servicio.auto.placa }}</p>
-                        <p class="mb-0"><strong>Kilometraje:</strong> {{ servicio.km_entrada }} km</p>
-                    </div>
-                    <div class="col-sm-6 mb-3">
-                        <p class="text-muted mb-1">Propietario</p>
-                        <h5 class="mb-0">{{ servicio.auto.cliente.nombre }}</h5>
-                        <p class="mb-0"><strong>Tel:</strong> {{ servicio.auto.cliente.telefono }}</p>
-                    </div>
-                </div>
-                <hr>
-                <div class="row">
-                    <div class="col-sm-6">
-                        <p class="text-muted mb-1">Mecánico Asignado</p>
-                        <p class="mb-0 fw-bold">{{ servicio.mecanico.nombre|default:"Sin asignar" }}</p>
-                    </div>
-                    <div class="col-sm-6">
-                        <p class="text-muted mb-1">Fecha de Ingreso</p>
-                        <p class="mb-0 fw-bold">{{ servicio.fecha_agenda|date:"d/m/Y" }} a las {{ servicio.hora_agenda|time:"H:i" }}</p>
-                    </div>
-                </div>
-            </div>
+<div class="container pb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">Gestión de Ticket #{{ servicio.id }}</h2>
+            <span class="badge bg-light text-dark border border-secondary fw-bold fs-6 mt-2 px-2 py-1">
+                Estado Actual: {{ servicio.estado }}
+            </span>
         </div>
-
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-secondary text-white">
-                <h5 class="mb-0">Repuestos Utilizados</h5>
-            </div>
-            <div class="card-body">
-                {% if error_stock %}
-                    <div class="alert alert-danger">{{ error_stock }}</div>
-                {% endif %}
-                
-                <div class="table-responsive mb-4">
-                    <table class="table table-sm">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Cantidad</th>
-                                <th>Repuesto</th>
-                                <th>Precio Unit.</th>
-                                <th>Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for detalle in servicio.refacciones_usadas.all %}
-                            <tr>
-                                <td>{{ detalle.cantidad }}x</td>
-                                <td>{{ detalle.refaccion.nombre }}</td>
-                                <td>${{ detalle.precio_unitario_neto }}</td>
-                                <td><strong>${% widthratio detalle.cantidad 1 detalle.precio_unitario_neto %}</strong></td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="4" class="text-center text-muted py-2">No se han asignado repuestos a este vehículo.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-
-                <hr>
-                
-                <form method="POST" class="row g-2 align-items-end">
-                    {% csrf_token %}
-                    <input type="hidden" name="agregar_refaccion" value="1">
-                    
-                    <div class="col-md-7">
-                        <label class="form-label small fw-bold">Seleccionar Refacción</label>
-                        {{ form_detalle.refaccion }}
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label small fw-bold">Cantidad</label>
-                        {{ form_detalle.cantidad }}
-                    </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary w-100">Agregar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <div class="card shadow-sm">
-            <div class="card-header bg-light">
-                <h5 class="mb-0">Desglose Financiero</h5>
-            </div>
-            <div class="card-body">
-                <div class="d-flex justify-content-between mb-2">
-                    <span>Mano de Obra (Neto):</span>
-                    <span>${{ servicio.costo_mano_obra_neto }}</span>
-                </div>
-                <div class="d-flex justify-content-between mb-2">
-                    <span>Refacciones (Neto):</span>
-                    <span>${{ servicio.costo_refacciones_neto }}</span>
-                </div>
-                <hr>
-                <div class="d-flex justify-content-between mb-2">
-                    <span>Subtotal:</span>
-                    <span>${{ servicio.subtotal_neto }}</span>
-                </div>
-                <div class="d-flex justify-content-between mb-2 text-muted">
-                    <span>IVA ({{ servicio.porcentaje_iva_aplicado }}%):</span>
-                    <span>${{ servicio.iva_total }}</span>
-                </div>
-                <div class="d-flex justify-content-between mt-3">
-                    <h5 class="mb-0">Total a Pagar:</h5>
-                    <h5 class="mb-0 text-success">${{ servicio.gran_total }}</h5>
-                </div>
-            </div>
-        </div>
+        <a href="{% url 'taller:dashboard' %}" class="btn btn-outline-secondary btn-sm fw-bold">Volver al Panel</a>
     </div>
 
-    <div class="col-md-4 col-12">
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-light">
-                <h5 class="mb-0">Estado Actual</h5>
-            </div>
-            <div class="card-body text-center">
-                {% if servicio.estado == 'Pendiente' %}
-                    <h3 class="text-warning">Pendiente</h3>
-                {% elif servicio.estado == 'En Proceso' %}
-                    <h3 class="text-info">En Proceso</h3>
-                {% else %}
-                    <h3 class="text-success">Entregado</h3>
-                {% endif %}
-                
-                <hr>
-                <p class="text-muted small mb-2">Actualizar Estado</p>
-                <form method="POST">
-                    {% csrf_token %}
-                    <input type="hidden" name="cambiar_estado" value="1">
-                    <select name="nuevo_estado" class="form-select mb-3" onchange="this.form.submit()">
-                        {% for estado in estados_disponibles %}
-                            <option value="{{ estado }}" {% if servicio.estado == estado %}selected{% endif %}>
-                                {{ estado }}
-                            </option>
+    <div class="row">
+        <div class="col-md-7">
+            <div class="card shadow-sm mb-4 border-0">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">Acciones de Servicio</h5>
+                    <form method="post" class="d-grid gap-3">
+                        {% csrf_token %}
+                        
+                        {% for boton in servicio.obtener_botones_estado %}
+                            <button type="submit" name="nuevo_estado" value="{{ boton.nuevo_estado }}" class="btn {{ boton.clase_css }} btn-lg py-3 fw-bold shadow-sm text-uppercase">
+                                {{ boton.label }}
+                            </button>
+                        {% empty %}
+                            <div class="alert alert-success border-0 mb-0 d-flex align-items-center">
+                                <div><strong>Servicio Completado:</strong> El vehículo ha sido retirado por el cliente.</div>
+                            </div>
                         {% endfor %}
-                    </select>
-                </form>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4 border-0">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3 border-bottom pb-2">Información del Vehículo</h5>
+                    <div class="row">
+                        <div class="col-6 mb-2">
+                            <small class="text-muted d-block">Marca y Modelo</small>
+                            <strong>{{ servicio.auto.marca }} {{ servicio.auto.modelo }}</strong>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <small class="text-muted d-block">Patente</small>
+                            <span class="badge bg-light text-dark border fs-6">{{ servicio.auto.placa }}</span>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block">Km de Ingreso</small>
+                            <strong>{{ servicio.km_entrada }} km</strong>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block">Cliente</small>
+                            <strong>{{ servicio.auto.cliente.nombre }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3 border-bottom pb-2">Refacciones Aplicadas</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Repuesto</th>
+                                    <th>Cant.</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for detalle in servicio.refacciones_usadas.all %}
+                                <tr>
+                                    <td>{{ detalle.refaccion.nombre }}</td>
+                                    <td>{{ detalle.cantidad }}</td>
+                                    <td>${{ detalle.subtotal_neto }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted py-3">Sin refacciones cargadas</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {% if servicio.estado == 'En Proceso' %}
+                    <hr>
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="agregar_refaccion" value="1">
+                        <div class="row g-2">
+                            <div class="col-8">
+                                {{ form_detalle.refaccion }}
+                            </div>
+                            <div class="col-4">
+                                {{ form_detalle.cantidad }}
+                            </div>
+                            <div class="col-12 mt-2">
+                                <button type="submit" class="btn btn-outline-primary w-100 fw-bold text-uppercase">Agregar Repuesto</button>
+                            </div>
+                        </div>
+                        {% if error_stock %}
+                        <div class="alert alert-danger mt-2 py-1 small">{{ error_stock }}</div>
+                        {% endif %}
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="card shadow-sm border-0 bg-light">
+                <div class="card-body text-end">
+                    <h5 class="fw-bold mb-3 text-start border-bottom pb-2">Resumen de Cuenta</h5>
+                    <p class="mb-1">Mano de Obra: <strong>${{ servicio.costo_mano_obra_neto }}</strong></p>
+                    <p class="mb-1">Repuestos: <strong>${{ servicio.total_refacciones_neto }}</strong></p>
+                    <p class="mb-1">IVA ({{ servicio.porcentaje_iva_aplicado }}%): <strong>${{ servicio.iva_total }}</strong></p>
+                    <hr>
+                    <h3 class="fw-bold text-primary">Total: ${{ servicio.gran_total }}</h3>
+                </div>
             </div>
         </div>
     </div>

@@ -1,58 +1,87 @@
 {% extends 'taller/base.html' %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12 d-flex justify-content-between align-items-center mb-4">
-        <h2>Panel de Control</h2>
-        <a href="{% url 'taller:nuevo_servicio' %}" class="btn btn-primary">+ Nuevo Servicio</a>
+<div class="container pb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Panel Principal</h2>
+        <a href="{% url 'taller:nuevo_servicio' %}" class="btn btn-primary fw-bold">+ Nuevo Servicio</a>
     </div>
-</div>
 
-<div class="card shadow-sm">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Ticket #</th>
-                        <th>Auto</th>
-                        <th>Estado</th>
-                        <th>Mecánico</th>
-                        <th>Fecha Agenda</th>
-                        <th>Total ($)</th>
-                        <th>Acción</th> </tr>
-                </thead>
-                <tbody>
-                    {% for servicio in servicios %}
-                    <tr>
-                        <td><strong>{{ servicio.id }}</strong></td>
-                        <td>{{ servicio.auto.marca }} {{ servicio.auto.modelo }} <br> <small class="text-muted">{{ servicio.auto.placa }}</small></td>
-                        <td>
-                            {% if servicio.estado == 'Pendiente' %}
-                                <span class="badge bg-warning text-dark">Pendiente</span>
-                            {% elif servicio.estado == 'En Proceso' %}
-                                <span class="badge bg-info text-dark">En Proceso</span>
-                            {% else %}
-                                <span class="badge bg-success">Entregado</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ servicio.mecanico.nombre|default:"Sin asignar" }}</td>
-                        <td>{{ servicio.fecha_agenda|date:"d/m/Y" }}</td>
-                        <td>${{ servicio.gran_total }}</td>
-                        <td>
-                            <a href="{% url 'taller:detalle_servicio' servicio.id %}" class="btn btn-sm btn-outline-primary">Ver Ticket</a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="7" class="text-center py-4 text-muted">
-                            No hay servicios registrados en el sistema.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="d-none d-lg-block shadow-sm rounded bg-white p-3">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>Ticket #</th>
+                    <th>Vehículo</th>
+                    <th>Estado</th>
+                    <th>Mecánico</th>
+                    <th>Total ($)</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in servicios %}
+                <tr>
+                    <td><strong>{{ s.id }}</strong></td>
+                    <td>
+                        <div class="fw-bold">{{ s.auto.marca }} {{ s.auto.modelo }}</div>
+                        <small class="text-muted">{{ s.auto.placa }}</small>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark border border-secondary fw-bold px-2 py-1">
+                            {{ s.estado }}
+                        </span>
+                    </td>
+                    <td>{{ s.mecanico.nombre|default:"Sin asignar" }}</td>
+                    <td class="fw-bold">${{ s.gran_total }}</td>
+                    <td>
+                        <a href="{% url 'taller:detalle_servicio' s.id %}" class="btn btn-sm btn-outline-primary fw-bold px-3">Ver Ticket</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center py-4 text-muted">No hay servicios registrados en el sistema.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-block d-lg-none">
+        {% for s in servicios %}
+        <div class="card mb-4 shadow-sm border-0 rounded-4">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="fw-bold text-muted fs-5">Ticket #{{ s.id }}</span>
+                    <span class="badge bg-light text-dark border border-secondary px-3 py-2 fs-6">
+                        {{ s.estado }}
+                    </span>
+                </div>
+                
+                <h3 class="fw-bold mb-1">{{ s.auto.marca }} {{ s.auto.modelo }}</h3>
+                <div class="mb-3">
+                    <span class="badge bg-light text-dark border border-dark fs-5 py-2 px-3">{{ s.auto.placa }}</span>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-end text-muted mb-4 mt-2">
+                    <div>
+                        <small class="d-block">Mecánico</small>
+                        <strong class="fs-6">{{ s.mecanico.nombre|default:"N/A" }}</strong>
+                    </div>
+                    <div class="text-end">
+                        <small class="d-block">Total a pagar</small>
+                        <strong class="text-primary fs-4">${{ s.gran_total }}</strong>
+                    </div>
+                </div>
+                
+                <a href="{% url 'taller:detalle_servicio' s.id %}" class="btn btn-primary w-100 btn-lg fw-bold py-3 rounded-3 shadow-sm fs-5">
+                    GESTIONAR TICKET
+                </a>
+            </div>
         </div>
+        {% empty %}
+        <div class="alert alert-secondary text-center p-4 rounded-4 shadow-sm">
+            <strong>No hay servicios registrados.</strong><br>Tocá el botón superior para crear uno.
+        </div>
+        {% endfor %}
     </div>
 </div>
 {% endblock %}

@@ -70,6 +70,7 @@ class Servicio(models.Model):
     ESTADOS = [
         ('Pendiente', 'Pendiente'),
         ('En Proceso', 'En Proceso'),
+        ('Terminado', 'Terminado'),
         ('Entregado', 'Entregado'),
     ]
 
@@ -108,6 +109,25 @@ class Servicio(models.Model):
             'costo_refacciones_neto', 'subtotal_neto', 
             'porcentaje_iva_aplicado', 'iva_total', 'gran_total'
         ])
+
+    def obtener_botones_estado(self):
+        """
+        Diccionario centralizado de transiciones permitidas.
+        Controla qué botón se dibuja en el HTML según el estado actual.
+        """
+        transiciones = {
+            'Pendiente': [
+                {'nuevo_estado': 'En Proceso', 'label': 'INICIAR TRABAJO', 'clase_css': 'btn-primary'}
+            ],
+            'En Proceso': [
+                {'nuevo_estado': 'Terminado', 'label': 'FINALIZAR Y ENVIAR FACTURA', 'clase_css': 'btn-success'}
+            ],
+            'Terminado': [
+                {'nuevo_estado': 'Entregado', 'label': 'REGISTRAR ENTREGA FINAL', 'clase_css': 'btn-dark'}
+            ],
+            'Entregado': []
+        }
+        return transiciones.get(self.estado, [])
 
     def __str__(self):
         return f"Servicio #{self.id} - {self.auto.placa} ({self.estado})"

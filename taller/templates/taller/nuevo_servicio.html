@@ -1,29 +1,64 @@
 {% extends 'taller/base.html' %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8 col-12"> <div class="card shadow-sm mt-4">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Registrar Nuevo Servicio</h4>
+<style>
+    /* MAGIA TOUCH-FRIENDLY: Solo se activa en pantallas de celular (menores a 992px) */
+    @media (max-width: 991.98px) {
+        .mobile-touch-form input, 
+        .mobile-touch-form select, 
+        .mobile-touch-form textarea {
+            display: block;
+            width: 100%;
+            padding: 1rem 1.25rem !important; /* Relleno amplio para dedos */
+            font-size: 1.15rem !important; /* Letra grande para fácil lectura */
+            border-radius: 0.5rem !important;
+            border: 1px solid #ced4da !important;
+            margin-top: 0.5rem;
+        }
+        
+        /* Botones de acción ocupan todo el ancho en celular */
+        .mobile-touch-form .btn-action-mobile {
+            width: 100%;
+            margin-bottom: 0.5rem;
+            padding: 1rem !important;
+            font-size: 1.2rem !important;
+            font-weight: bold;
+        }
+        
+        .mobile-touch-form .action-container {
+            flex-direction: column-reverse; /* El botón principal queda arriba del de cancelar */
+        }
+    }
+</style>
+
+<div class="row justify-content-center pb-5">
+    <div class="col-md-8 col-12"> 
+        <div class="card shadow-sm mt-4 border-0">
+            <div class="card-header bg-primary text-white py-3">
+                <h4 class="mb-0 fw-bold">Registrar Nuevo Servicio</h4>
             </div>
-            <div class="card-body">
-                <form method="POST">
+            <div class="card-body p-4">
+                <form method="POST" class="mobile-touch-form">
                     {% csrf_token %}
                     <div class="row g-3">
                         {% for field in form %}
-                        <div class="col-md-6 col-12">
-                            <label class="form-label fw-bold">{{ field.label }}</label>
+                        <div class="col-md-6 col-12 mb-2">
+                            <label class="form-label fw-bold text-secondary">{{ field.label }}</label>
+                            
                             {{ field }}
+                            
                             {% if field.errors %}
-                                <div class="text-danger small mt-1">{{ field.errors }}</div>
+                                <div class="text-danger small mt-1 fw-bold">{{ field.errors }}</div>
                             {% endif %}
                         </div>
                         {% endfor %}
                     </div>
+                    
                     <hr class="my-4">
-                    <div class="d-flex justify-content-end gap-2">
-                        <a href="{% url 'taller:dashboard' %}" class="btn btn-outline-secondary btn-lg">Cancelar</a>
-                        <button type="submit" class="btn btn-success btn-lg">Guardar Ticket</button>
+                    
+                    <div class="d-flex justify-content-end gap-2 action-container">
+                        <a href="{% url 'taller:dashboard' %}" class="btn btn-outline-secondary btn-lg btn-action-mobile">Cancelar</a>
+                        <button type="submit" class="btn btn-success btn-lg btn-action-mobile">Guardar Ticket</button>
                     </div>
                 </form>
             </div>

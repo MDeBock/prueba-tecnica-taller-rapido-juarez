@@ -10,9 +10,11 @@
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'taller:dashboard' %}"> Taller Juárez</a>
+            <a class="navbar-brand" href="{% url 'taller:dashboard' %}">Taller Juárez</a>
             
-            <div class="d-flex">
+            <div class="d-flex gap-2">
+                <a href="{% url 'taller:dashboard' %}" class="btn btn-outline-light btn-sm">Panel Principal</a>
+                <a href="{% url 'taller:metricas' %}" class="btn btn-outline-light btn-sm">Métricas</a>
                 <a href="{% url 'taller:inventario' %}" class="btn btn-outline-light btn-sm">Inventario</a>
             </div>
         </div>

@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Servicio, Refaccion, DetalleRefaccion
+from django.db.models import Count, Sum
+from .models import Servicio, Refaccion, DetalleRefaccion, Mecanico
 from .forms import ServicioForm, RefaccionForm, DetalleRefaccionForm
 
 def dashboard(request):
@@ -48,7 +49,6 @@ def detalle_servicio(request, servicio_id):
     error_stock = None
     
     if request.method == 'POST':
-        # Acción 1: Cambiar el estado del ticket
         if 'cambiar_estado' in request.POST:
             nuevo_estado = request.POST.get('nuevo_estado')
             if nuevo_estado in dict(Servicio.ESTADOS).keys():
@@ -56,7 +56,6 @@ def detalle_servicio(request, servicio_id):
                 servicio.save(update_fields=['estado'])
                 return redirect('taller:detalle_servicio', servicio_id=servicio.id)
                 
-        # Acción 2: Agregar un repuesto al auto
         elif 'agregar_refaccion' in request.POST:
             form_detalle = DetalleRefaccionForm(request.POST)
             if form_detalle.is_valid():
@@ -66,14 +65,11 @@ def detalle_servicio(request, servicio_id):
                 
                 if cantidad <= refaccion.stock:
                     detalle.servicio = servicio
-                    # Congelamos el precio histórico
                     detalle.precio_unitario_neto = refaccion.precio_neto
-                    detalle.save() # Dispara el recalculo de IVA
+                    detalle.save() 
                     
-                    # Restamos del inventario general
                     refaccion.stock -= cantidad
                     refaccion.save(update_fields=['stock'])
-                    
                     return redirect('taller:detalle_servicio', servicio_id=servicio.id)
                 else:
                     error_stock = f"Stock insuficiente. Solo quedan {refaccion.stock} de {refaccion.nombre}."
@@ -85,3 +81,15 @@ def detalle_servicio(request, servicio_id):
         'error_stock': error_stock,
     }
     return render(request, 'taller/detalle_servicio.html', contexto)
+
+def metricas(request):
+    # Agrupamos los datos por mecánico para no tener que calcular a mano
+    mecanicos = Mecanico.objects.annotate(
+        total_servicios=Count('servicios'),
+        recaudacion_total=Sum('servicios__gran_total')
+    ).order_by('-total_servicios')
+
+    contexto = {
+        'mecanicos': mecanicos
+    }
+    return render(request, 'taller/metricas.html', contexto)

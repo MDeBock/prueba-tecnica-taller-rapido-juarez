@@ -17,7 +17,7 @@
                         <th>Nombre del Repuesto</th>
                         <th>Stock Disponible</th>
                         <th>Precio Neto (Sin IVA)</th>
-                    </tr>
+                        <th>Acciones</th> </tr>
                 </thead>
                 <tbody>
                     {% for item in refacciones %}
@@ -31,10 +31,13 @@
                             {% endif %}
                         </td>
                         <td>${{ item.precio_neto }}</td>
+                        <td>
+                            <a href="{% url 'taller:editar_refaccion' item.id %}" class="btn btn-sm btn-outline-primary">Editar</a>
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="3" class="text-center py-4 text-muted">
+                        <td colspan="4" class="text-center py-4 text-muted">
                             El inventario está vacío.
                         </td>
                     </tr>

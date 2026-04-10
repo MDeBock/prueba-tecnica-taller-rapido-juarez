@@ -1,0 +1,109 @@
+{% extends 'taller/base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h2>Detalle del Ticket #{{ servicio.id }}</h2>
+        <a href="{% url 'taller:dashboard' %}" class="btn btn-outline-secondary">Volver al Panel</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 col-12 mb-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Información del Vehículo y Cliente</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-sm-6 mb-3">
+                        <p class="text-muted mb-1">Vehículo</p>
+                        <h5 class="mb-0">{{ servicio.auto.marca }} {{ servicio.auto.modelo }} ({{ servicio.auto.anio }})</h5>
+                        <p class="mb-0"><strong>Placa:</strong> {{ servicio.auto.placa }}</p>
+                        <p class="mb-0"><strong>Kilometraje:</strong> {{ servicio.km_entrada }} km</p>
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <p class="text-muted mb-1">Propietario</p>
+                        <h5 class="mb-0">{{ servicio.auto.cliente.nombre }}</h5>
+                        <p class="mb-0"><strong>Tel:</strong> {{ servicio.auto.cliente.telefono }}</p>
+                        {% if servicio.auto.cliente.email %}
+                            <p class="mb-0"><strong>Email:</strong> {{ servicio.auto.cliente.email }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <p class="text-muted mb-1">Mecánico Asignado</p>
+                        <p class="mb-0 fw-bold">{{ servicio.mecanico.nombre|default:"Sin asignar" }}</p>
+                    </div>
+                    <div class="col-sm-6">
+                        <p class="text-muted mb-1">Fecha de Ingreso</p>
+                        <p class="mb-0 fw-bold">{{ servicio.fecha_agenda|date:"d/m/Y" }} a las {{ servicio.hora_agenda|time:"H:i" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">Desglose Financiero</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Mano de Obra (Neto):</span>
+                    <span>${{ servicio.costo_mano_obra_neto }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Refacciones (Neto):</span>
+                    <span>${{ servicio.costo_refacciones_neto }}</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Subtotal:</span>
+                    <span>${{ servicio.subtotal_neto }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2 text-muted">
+                    <span>IVA ({{ servicio.porcentaje_iva_aplicado }}%):</span>
+                    <span>${{ servicio.iva_total }}</span>
+                </div>
+                <div class="d-flex justify-content-between mt-3">
+                    <h5 class="mb-0">Total a Pagar:</h5>
+                    <h5 class="mb-0 text-success">${{ servicio.gran_total }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 col-12">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">Estado Actual</h5>
+            </div>
+            <div class="card-body text-center">
+                {% if servicio.estado == 'Pendiente' %}
+                    <h3 class="text-warning">Pendiente</h3>
+                {% elif servicio.estado == 'En Proceso' %}
+                    <h3 class="text-info">En Proceso</h3>
+                {% else %}
+                    <h3 class="text-success">Entregado</h3>
+                {% endif %}
+                
+                <hr>
+                <p class="text-muted small mb-2">Actualizar Estado</p>
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="cambiar_estado" value="1">
+                    <select name="nuevo_estado" class="form-select mb-3" onchange="this.form.submit()">
+                        {% for estado in estados_disponibles %}
+                            <option value="{{ estado }}" {% if servicio.estado == estado %}selected{% endif %}>
+                                {{ estado }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

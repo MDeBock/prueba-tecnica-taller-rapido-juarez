@@ -1,50 +1,119 @@
 {% extends 'taller/base.html' %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12 d-flex justify-content-between align-items-center mb-4">
-        <h2>Inventario de Refacciones</h2>
-        <a href="{% url 'taller:nueva_refaccion' %}" class="btn btn-primary">+ Nueva Refacción</a>
+<div class="container pb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 mt-2">
+        <h2 class="fw-bold mb-0">Inventario</h2>
+        <a href="{% url 'taller:nueva_refaccion' %}" class="btn btn-primary fw-bold">+ Nueva Refacción</a>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4 rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-0 ps-4 pe-2 text-muted">
+                    <i class="bi bi-search fs-4"></i>
+                </span>
+                <input type="text" id="buscadorInventario" 
+                       class="form-control form-control-lg border-0 ps-2 py-3 fw-medium" 
+                       placeholder="Buscar por repuesto, precio o stock..."
+                       style="box-shadow: none; font-size: 1.2rem;">
+            </div>
+        </div>
+    </div>
+
+    <div class="d-none d-lg-block card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4 py-3">Nombre del Repuesto</th>
+                            <th class="py-3">Stock Disponible</th>
+                            <th class="py-3">Precio Neto (Sin IVA)</th>
+                            <th class="pe-4 py-3">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaEscritorio">
+                        {% for item in refacciones %}
+                        <tr class="fila-filtrable">
+                            <td class="ps-4"><strong>{{ item.nombre }}</strong></td>
+                            <td>
+                                {% if item.stock <= 5 %}
+                                    <span class="badge bg-danger px-2 py-1">{{ item.stock }} (Bajo)</span>
+                                {% else %}
+                                    <span class="badge bg-success px-2 py-1">{{ item.stock }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="fw-bold">${{ item.precio_neto }}</td>
+                            <td class="pe-4">
+                                <a href="{% url 'taller:editar_refaccion' item.id %}" class="btn btn-sm btn-outline-primary fw-bold px-3 text-uppercase">Editar</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-5 text-muted">
+                                <strong>El inventario está vacío.</strong>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-block d-lg-none" id="listaMovil">
+        {% for item in refacciones %}
+        <div class="card mb-3 shadow-sm border-0 rounded-4 tarjeta-filtrable">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h4 class="fw-bold mb-0 text-uppercase" style="letter-spacing: -0.5px;">{{ item.nombre }}</h4>
+                    <div>
+                        {% if item.stock <= 5 %}
+                            <span class="badge bg-danger fs-6 px-2 py-1">{{ item.stock }}</span>
+                        {% else %}
+                            <span class="badge bg-success fs-6 px-2 py-1">{{ item.stock }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mb-3 mt-3 border-top pt-3">
+                    <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Precio Neto</small>
+                    <strong class="fs-3 text-primary">${{ item.precio_neto }}</strong>
+                </div>
+                
+                <a href="{% url 'taller:editar_refaccion' item.id %}" class="btn btn-outline-primary w-100 btn-lg fw-bold py-3 rounded-3 text-uppercase shadow-sm">
+                    Gestionar Stock
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="alert alert-secondary text-center p-4 rounded-4 shadow-sm">
+            <strong>El inventario está vacío.</strong>
+        </div>
+        {% endfor %}
     </div>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Nombre del Repuesto</th>
-                        <th>Stock Disponible</th>
-                        <th>Precio Neto (Sin IVA)</th>
-                        <th>Acciones</th> </tr>
-                </thead>
-                <tbody>
-                    {% for item in refacciones %}
-                    <tr>
-                        <td><strong>{{ item.nombre }}</strong></td>
-                        <td>
-                            {% if item.stock <= 5 %}
-                                <span class="badge bg-danger">{{ item.stock }} (Bajo)</span>
-                            {% else %}
-                                <span class="badge bg-success">{{ item.stock }}</span>
-                            {% endif %}
-                        </td>
-                        <td>${{ item.precio_neto }}</td>
-                        <td>
-                            <a href="{% url 'taller:editar_refaccion' item.id %}" class="btn btn-sm btn-outline-primary">Editar</a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" class="text-center py-4 text-muted">
-                            El inventario está vacío.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const buscador = document.getElementById('buscadorInventario');
+        const filasTabla = document.querySelectorAll('.fila-filtrable');
+        const tarjetasMoviles = document.querySelectorAll('.tarjeta-filtrable');
+
+        buscador.addEventListener('input', function(e) {
+            const termino = e.target.value.toLowerCase();
+
+            filasTabla.forEach(fila => {
+                const texto = fila.textContent.toLowerCase();
+                fila.style.display = texto.includes(termino) ? '' : 'none';
+            });
+
+            tarjetasMoviles.forEach(tarjeta => {
+                const texto = tarjeta.textContent.toLowerCase();
+                tarjeta.style.display = texto.includes(termino) ? 'block' : 'none';
+            });
+        });
+    });
+</script>
 {% endblock %}

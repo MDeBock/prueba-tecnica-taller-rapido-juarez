@@ -6,20 +6,18 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 
 def generar_pdf_y_enviar_correo(servicio, email_cliente):
-    # 1. Crear el lienzo PDF en memoria
     buffer = io.BytesIO()
     p = canvas.Canvas(buffer, pagesize=letter)
     ancho, alto = letter
 
-    # --- DISEÑO DEL COMPROBANTE ---
-    # Cabecera
+   
     p.setFont("Helvetica-Bold", 16)
     p.drawString(50, alto - 50, "TALLER RÁPIDO JUÁREZ")
     p.setFont("Helvetica", 10)
     p.drawString(50, alto - 70, "Comprobante de Servicio Técnico")
     p.drawString(50, alto - 85, f"Ticket N°: {servicio.id} | Fecha: {servicio.fecha_agenda.strftime('%d/%m/%Y')}")
     
-    # Datos del Vehículo y Cliente
+   
     p.line(50, alto - 100, ancho - 50, alto - 100)
     p.setFont("Helvetica-Bold", 12)
     p.drawString(50, alto - 120, "Datos del Vehículo:")
@@ -31,7 +29,7 @@ def generar_pdf_y_enviar_correo(servicio, email_cliente):
     p.drawString(ancho / 2, alto - 140, f"Cliente: {servicio.auto.cliente.nombre}")
     p.drawString(ancho / 2, alto - 155, f"Mecánico: {servicio.mecanico.nombre if servicio.mecanico else 'Sin asignar'}")
 
-    # Desglose Financiero
+    
     p.line(50, alto - 190, ancho - 50, alto - 190)
     p.setFont("Helvetica-Bold", 12)
     p.drawString(50, alto - 210, "Desglose Financiero:")
@@ -50,7 +48,7 @@ def generar_pdf_y_enviar_correo(servicio, email_cliente):
         p.drawRightString(ancho - 50, y, f"${subtotal_ref}")
         y -= 15
     
-    # Totales
+    
     y -= 10
     p.line(50, y, ancho - 50, y)
     y -= 20
@@ -66,12 +64,12 @@ def generar_pdf_y_enviar_correo(servicio, email_cliente):
     p.drawString(50, y, "TOTAL A PAGAR:")
     p.drawRightString(ancho - 50, y, f"${servicio.gran_total}")
     
-    # --- SECCIÓN DE FIRMA (Agrandada un 50%) ---
+    
     y -= 100
     ruta_firma = os.path.join(settings.BASE_DIR, 'taller', 'static', 'firmas', 'firma.png')
     
     if os.path.exists(ruta_firma):
-        # Aumentamos ancho de 150 a 225 y alto de 50 a 75
+        
         p.drawImage(ruta_firma, 50, y, width=225, height=75, mask='auto')
         y -= 20
         p.setFont("Helvetica-Oblique", 9)

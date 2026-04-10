@@ -3,12 +3,9 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from decimal import Decimal
 
-# ==========================================
-# CONFIGURACIÓN GLOBAL (El panel del Admin)
-# ==========================================
 class Configuracion(models.Model):
     nombre_taller = models.CharField(max_length=150, default="Taller Juárez")
-    # CAMBIO UX: Ahora pide 16, 21, 10.5, etc.
+    
     porcentaje_iva_actual = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('16.00'), help_text="Porcentaje de IVA (Ejemplo: 16 para 16%, 21 para 21%)")
 
     def save(self, *args, **kwargs):
@@ -25,14 +22,12 @@ class Configuracion(models.Model):
 def obtener_iva_vigente():
     try:
         config = Configuracion.objects.first()
-        # CAMBIO UX: Valor por defecto ahora es 16.00
+        
         return config.porcentaje_iva_actual if config else Decimal('16.00')
     except Exception:
         return Decimal('16.00')
 
-# ==========================================
-# MODELOS DEL NEGOCIO
-# ==========================================
+
 class Cliente(models.Model):
     nombre = models.CharField(max_length=150)
     telefono = models.CharField(max_length=20)
@@ -85,7 +80,7 @@ class Servicio(models.Model):
     costo_refacciones_neto = models.DecimalField(max_digits=10, decimal_places=2, default=0, editable=False)
     subtotal_neto = models.DecimalField(max_digits=10, decimal_places=2, default=0, editable=False)
     
-    # CAMBIO UX: Guarda el valor entero (ej: 16.00)
+    
     porcentaje_iva_aplicado = models.DecimalField(max_digits=5, decimal_places=2, default=obtener_iva_vigente)
     
     iva_total = models.DecimalField(max_digits=10, decimal_places=2, default=0, editable=False)
@@ -101,7 +96,7 @@ class Servicio(models.Model):
         self.costo_refacciones_neto = total_refacciones
         self.subtotal_neto = self.costo_mano_obra_neto + self.costo_refacciones_neto
         
-        # CAMBIO UX (MAGIA MATEMÁTICA): Dividimos por 100 aquí mismo
+        
         self.iva_total = self.subtotal_neto * (self.porcentaje_iva_aplicado / Decimal('100'))
         self.gran_total = self.subtotal_neto + self.iva_total
         
@@ -141,9 +136,7 @@ class DetalleRefaccion(models.Model):
     def __str__(self):
         return f"{self.cantidad}x {self.refaccion.nombre} (Servicio #{self.servicio.id})"
 
-# ==========================================
-# SIGNALS (Disparadores)
-# ==========================================
+
 @receiver(post_save, sender=DetalleRefaccion)
 @receiver(post_delete, sender=DetalleRefaccion)
 def recalcular_totales_servicio(sender, instance, **kwargs):

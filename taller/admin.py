@@ -1,12 +1,11 @@
 from django.contrib import admin
 from .models import Configuracion, Cliente, Auto, Mecanico, Refaccion, Servicio, DetalleRefaccion
 
-# Registro de la configuración global
+
 @admin.register(Configuracion)
 class ConfiguracionAdmin(admin.ModelAdmin):
-    list_display = ('nombre_taller', 'porcentaje_iva_actual')
+    list_display = ('nombre_taller', 'porcentaje_iva_actual')    
     
-    # Ocultamos el botón "Añadir" si ya existe una configuración (patrón Singleton)
     def has_add_permission(self, request):
         if self.model.objects.exists():
             return False

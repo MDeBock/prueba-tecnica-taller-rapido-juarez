@@ -98,7 +98,7 @@ def detalle_servicio(request, servicio_id):
 
 def metricas(request):
     ahora = timezone.now()
-    # Filtramos para que los cálculos solo incluyan servicios de este mes y año
+    
     mecanicos = Mecanico.objects.annotate(
         total_servicios=Count('servicios', filter=Q(servicios__creado_el__month=ahora.month, servicios__creado_el__year=ahora.year)),
         neto_mano_obra=Sum('servicios__costo_mano_obra_neto', filter=Q(servicios__creado_el__month=ahora.month, servicios__creado_el__year=ahora.year)),

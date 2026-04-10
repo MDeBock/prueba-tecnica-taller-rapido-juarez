@@ -2,9 +2,23 @@
 
 {% block content %}
 <div class="container pb-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold">Panel Principal</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4 mt-2">
+        <h2 class="fw-bold mb-0">Panel Principal</h2>
         <a href="{% url 'taller:nuevo_servicio' %}" class="btn btn-primary fw-bold">+ Nuevo Servicio</a>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4 rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-0 ps-4 pe-2 text-muted">
+                    <i class="bi bi-search fs-5"></i>
+                </span>
+                <input type="text" id="buscadorHistorial" 
+                       class="form-control form-control-lg border-0 ps-2 py-3 fw-medium" 
+                       placeholder="Buscar historial por patente, marca, modelo o cliente..."
+                       style="box-shadow: none; font-size: 1.1rem;">
+            </div>
+        </div>
     </div>
 
     <div class="d-none d-lg-block shadow-sm rounded bg-white p-3">
@@ -12,7 +26,7 @@
             <thead class="table-dark">
                 <tr>
                     <th>Ticket #</th>
-                    <th>Vehículo</th>
+                    <th>Vehículo / Historial</th>
                     <th>Estado</th>
                     <th>Mecánico</th>
                     <th>Total ($)</th>
@@ -21,11 +35,14 @@
             </thead>
             <tbody>
                 {% for s in servicios %}
-                <tr>
+                <tr class="item-servicio" data-busqueda="{{ s.auto.placa|lower }} {{ s.auto.marca|lower }} {{ s.auto.modelo|lower }} {{ s.auto.cliente.nombre|default:''|lower }}">
                     <td><strong>{{ s.id }}</strong></td>
                     <td>
                         <div class="fw-bold">{{ s.auto.marca }} {{ s.auto.modelo }}</div>
-                        <small class="text-muted">{{ s.auto.placa }}</small>
+                        <div class="mt-1">
+                            <span class="badge bg-light text-dark border border-secondary me-1">{{ s.auto.placa }}</span>
+                            <small class="text-muted fw-bold"><i class="bi bi-speedometer2"></i> {{ s.km_entrada|default:"N/A" }} km</small>
+                        </div>
                     </td>
                     <td>
                         <span class="badge bg-light text-dark border border-secondary fw-bold px-2 py-1">
@@ -47,7 +64,7 @@
 
     <div class="d-block d-lg-none">
         {% for s in servicios %}
-        <div class="card mb-4 shadow-sm border-0 rounded-4">
+        <div class="card mb-4 shadow-sm border-0 rounded-4 item-servicio" data-busqueda="{{ s.auto.placa|lower }} {{ s.auto.marca|lower }} {{ s.auto.modelo|lower }} {{ s.auto.cliente.nombre|default:''|lower }}">
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <span class="fw-bold text-muted fs-5">Ticket #{{ s.id }}</span>
@@ -57,17 +74,18 @@
                 </div>
                 
                 <h3 class="fw-bold mb-1">{{ s.auto.marca }} {{ s.auto.modelo }}</h3>
-                <div class="mb-3">
+                <div class="mb-3 d-flex align-items-center gap-2 mt-2">
                     <span class="badge bg-light text-dark border border-dark fs-5 py-2 px-3">{{ s.auto.placa }}</span>
+                    <span class="badge bg-secondary fs-6 py-2 px-3"><i class="bi bi-speedometer2"></i> {{ s.km_entrada|default:"N/A" }} km</span>
                 </div>
                 
-                <div class="d-flex justify-content-between align-items-end text-muted mb-4 mt-2">
+                <div class="d-flex justify-content-between align-items-end text-muted mb-4 mt-3 border-top pt-3">
                     <div>
-                        <small class="d-block">Mecánico</small>
-                        <strong class="fs-6">{{ s.mecanico.nombre|default:"N/A" }}</strong>
+                        <small class="d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Mecánico</small>
+                        <strong class="fs-6 text-dark">{{ s.mecanico.nombre|default:"N/A" }}</strong>
                     </div>
                     <div class="text-end">
-                        <small class="d-block">Total a pagar</small>
+                        <small class="d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Total a pagar</small>
                         <strong class="text-primary fs-4">${{ s.gran_total }}</strong>
                     </div>
                 </div>
@@ -84,4 +102,25 @@
         {% endfor %}
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputBusqueda = document.getElementById('buscadorHistorial');
+        const items = document.querySelectorAll('.item-servicio');
+
+        inputBusqueda.addEventListener('input', function(e) {
+            const termino = e.target.value.toLowerCase().trim();
+            
+            items.forEach(item => {
+                const textoOculto = item.getAttribute('data-busqueda');
+                
+                if (textoOculto.includes(termino)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}

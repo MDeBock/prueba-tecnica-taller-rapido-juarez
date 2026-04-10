@@ -28,9 +28,30 @@ Solucion: Desarrollo de un motor de busqueda y filtrado dinamico utilizando Vani
 Desafio: Los totales de facturacion incluian el IVA, lo cual distorsionaba la metrica de productividad real del mecanico y la rentabilidad del taller.
 Solucion: Refactorizacion de la logica de negocio en views.py. Las metricas ahora filtran dinamicamente por el mes en curso y separan los montos estrictamente Netos (Mano de obra vs. Costo de repuestos), aislando el ruido impositivo.
 
-### 4. Accesibilidad y Resiliencia
-Desafio: Las tasas de impuestos (como el IVA) pueden cambiar en el futuro o variar segun la region. Una actualizacion de estos valores no debe alterar los registros contables de meses o años anteriores.
+### 4. Integridad Historica y Escalabilidad Impositiva
+Desafio: Las tasas de impuestos (como el IVA) pueden cambiar en el futuro o variar segun la region. Una actualizacion de estos valores no debe alterar los registros contables de meses o anos anteriores.
 Solucion: Diseno de base de datos basado en "Snapshots" (Instantaneas). Los impuestos se configuran como variables iniciales, pero al procesar un servicio, el sistema guarda el valor absoluto y el porcentaje vigente en ese momento exacto. Esto blinda los registros historicos y establece una arquitectura escalable, facilitando la futura incorporacion de multiples impuestos locales o regionales a nivel de codigo sin romper la integridad contable.
+
+### 5. Accesibilidad y Resiliencia
+Desafio: El sistema debia estar accesible como un icono mas en el telefono del usuario, sin depender de abrir el navegador constantemente.
+Solucion: Integracion de arquitectura PWA, configurando un manifest.json dinamico y un Service Worker para habilitar la instalacion de la aplicacion en dispositivos moviles (Android/iOS) y de escritorio (Standalone).
+
+### Rutas y Endpoints
+Al tratarse de una arquitectura MVT (Model-View-Template) renderizada desde el servidor, las siguientes rutas representan los puntos de acceso principales del sistema:
+
+GET / : Dashboard o panel principal. Lista los servicios activos.
+
+GET, POST /nuevo/ : Formulario de creacion de un nuevo ticket de servicio.
+
+GET /inventario/ : Listado del inventario de refacciones y estado de stock.
+
+GET, POST /inventario/nueva/ : Alta de nueva refaccion.
+
+GET, POST /inventario/editar/<id>/ : Modificacion de una refaccion existente.
+
+GET, POST /servicio/<id>/ : Detalle del ticket. Permite agregar refacciones consumidas y modificar el estado del servicio mediante una maquina de estados.
+
+GET /metricas/ : Panel gerencial con el calculo de rendimiento por mecanico (filtrado por mes actual).
 
 ---
 

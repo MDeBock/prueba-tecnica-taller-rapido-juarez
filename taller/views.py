@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
-from .models import Servicio
-from .forms import ServicioForm
+from .models import Servicio, Refaccion
+from .forms import ServicioForm, RefaccionForm
 
 def dashboard(request):
     servicios = Servicio.objects.all().order_by('-creado_el')
@@ -18,3 +18,18 @@ def nuevo_servicio(request):
         form = ServicioForm()
     
     return render(request, 'taller/nuevo_servicio.html', {'form': form})
+
+def inventario(request):
+    refacciones = Refaccion.objects.all().order_by('nombre')
+    return render(request, 'taller/inventario.html', {'refacciones': refacciones})
+
+def nueva_refaccion(request):
+    if request.method == 'POST':
+        form = RefaccionForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('taller:inventario')
+    else:
+        form = RefaccionForm()
+    
+    return render(request, 'taller/nueva_refaccion.html', {'form': form})

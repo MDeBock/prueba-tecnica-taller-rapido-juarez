@@ -1,5 +1,5 @@
 from django import forms
-from .models import Servicio
+from .models import Servicio, Refaccion
 
 class ServicioForm(forms.ModelForm):
     class Meta:
@@ -15,4 +15,15 @@ class ServicioForm(forms.ModelForm):
             'mecanico': forms.Select(attrs={'class': 'form-select'}),
             'km_entrada': forms.NumberInput(attrs={'class': 'form-control'}),
             'costo_mano_obra_neto': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+        }
+
+class RefaccionForm(forms.ModelForm):
+    class Meta:
+        model = Refaccion
+        fields = ['nombre', 'stock', 'precio_neto']
+        
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Filtro de Aceite'}),
+            'stock': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
+            'precio_neto': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
         }

@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, Q
+from django.utils import timezone
 from .models import Servicio, Refaccion, DetalleRefaccion, Mecanico
 from .forms import ServicioForm, RefaccionForm, DetalleRefaccionForm
 from .utils import generar_pdf_y_enviar_correo
@@ -51,7 +52,6 @@ def detalle_servicio(request, servicio_id):
     error_stock = None
     
     if request.method == 'POST':
-        # ACCIÓN: Cambio de estado mediante botones individuales
         if 'nuevo_estado' in request.POST:
             nuevo_estado = request.POST.get('nuevo_estado')
             estado_anterior = servicio.estado
@@ -60,7 +60,6 @@ def detalle_servicio(request, servicio_id):
                 servicio.estado = nuevo_estado
                 servicio.save(update_fields=['estado'])
                 
-                # Si el nuevo estado es Terminado, disparamos el PDF y Mail
                 if nuevo_estado == 'Terminado' and estado_anterior != 'Terminado':
                     mail_base = servicio.auto.cliente.email
                     nombre_identificador = servicio.auto.cliente.nombre.replace(' ', '').lower()
@@ -75,7 +74,6 @@ def detalle_servicio(request, servicio_id):
                 
                 return redirect('taller:detalle_servicio', servicio_id=servicio.id)
                 
-        # ACCIÓN: Agregar refacciones al ticket
         elif 'agregar_refaccion' in request.POST:
             form_detalle = DetalleRefaccionForm(request.POST)
             if form_detalle.is_valid():
@@ -99,11 +97,18 @@ def detalle_servicio(request, servicio_id):
     return render(request, 'taller/detalle_servicio.html', contexto)
 
 def metricas(request):
+    ahora = timezone.now()
+    # Filtramos para que los cálculos solo incluyan servicios de este mes y año
     mecanicos = Mecanico.objects.annotate(
-        total_servicios=Count('servicios'),
-        recaudacion_total=Sum('servicios__gran_total')
+        total_servicios=Count('servicios', filter=Q(servicios__creado_el__month=ahora.month, servicios__creado_el__year=ahora.year)),
+        neto_mano_obra=Sum('servicios__costo_mano_obra_neto', filter=Q(servicios__creado_el__month=ahora.month, servicios__creado_el__year=ahora.year)),
+        neto_repuestos=Sum('servicios__costo_refacciones_neto', filter=Q(servicios__creado_el__month=ahora.month, servicios__creado_el__year=ahora.year))
     ).order_by('-total_servicios')
-    return render(request, 'taller/metricas.html', {'mecanicos': mecanicos})
+
+    return render(request, 'taller/metricas.html', {
+        'mecanicos': mecanicos,
+        'mes': ahora.strftime('%B %Y')
+    })
 
 def manifest_json(request):
     manifest = """{

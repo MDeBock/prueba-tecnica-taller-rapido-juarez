@@ -1,42 +1,156 @@
 {% extends 'taller/base.html' %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12 mb-4">
-        <h2>Metricas de Rendimiento</h2>
+<div class="container pb-5">
+    <div class="row">
+        <div class="col-12 mb-4 mt-2">
+            <h2 class="fw-bold mb-0">Rendimiento Mensual</h2>
+            <p class="text-muted fw-bold text-uppercase small">Periodo: {{ mes }}</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4 rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="row g-0 align-items-center">
+                
+                <div class="col-12 col-md-7 border-bottom border-md-0 border-md-end">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-0 ps-4 pe-2 text-muted">
+                            <i class="bi bi-search fs-5"></i>
+                        </span>
+                        <input type="text" id="filtroMecanico" 
+                               class="form-control form-control-lg border-0 ps-2 py-3 fw-medium" 
+                               placeholder="Buscar por nombre del mecánico..."
+                               style="box-shadow: none; font-size: 1.1rem;">
+                    </div>
+                </div>
+                
+                <div class="col-12 col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-0 ps-3 pe-2 text-muted">
+                            <i class="bi bi-sort-numeric-down fs-5"></i>
+                        </span>
+                        <select id="ordenMonto" class="form-select form-select-lg border-0 ps-2 py-3 fw-bold text-dark" style="box-shadow: none; font-size: 1.1rem; cursor: pointer;">
+                            <option value="mayor">Mayor Recaudación Neto</option>
+                            <option value="menor">Menor Recaudación Neto</option>
+                        </select>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="d-none d-lg-block card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="tablaMetricas">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Mecánico</th>
+                            <th class="text-center">Tickets</th>
+                            <th>Neto Mano Obra</th>
+                            <th>Neto Repuestos</th>
+                            <th class="pe-4">Total Neto</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpoTabla">
+                        {% for mecanico in mecanicos %}
+                        <tr class="item-mecanico" 
+                            data-nombre="{{ mecanico.nombre|lower }}" 
+                            data-total="{{ mecanico.neto_mano_obra|default:0|add:mecanico.neto_repuestos|default:0 }}">
+                            <td class="ps-4"><strong>{{ mecanico.nombre }}</strong></td>
+                            <td class="text-center">
+                                <span class="badge bg-dark rounded-pill">{{ mecanico.total_servicios }}</span>
+                            </td>
+                            <td class="text-success fw-bold">${{ mecanico.neto_mano_obra|default:"0.00" }}</td>
+                            <td class="text-primary fw-bold">${{ mecanico.neto_repuestos|default:"0.00" }}</td>
+                            <td class="pe-4 fw-bold fs-5 text-dark">
+                                ${{ mecanico.neto_mano_obra|default:0|add:mecanico.neto_repuestos|default:0 }}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center py-5">No hay registros este mes.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="contenedorTarjetas" class="d-block d-lg-none">
+        {% for mecanico in mecanicos %}
+        <div class="card mb-3 shadow-sm border-0 rounded-4 item-mecanico" 
+             data-nombre="{{ mecanico.nombre|lower }}" 
+             data-total="{{ mecanico.neto_mano_obra|default:0|add:mecanico.neto_repuestos|default:0 }}">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="fw-bold mb-0">{{ mecanico.nombre }}</h4>
+                    <span class="badge bg-dark fs-6">{{ mecanico.total_servicios }} Tickets</span>
+                </div>
+                <div class="row g-2 border-top pt-3">
+                    <div class="col-6">
+                        <small class="text-muted d-block text-uppercase fw-bold small-font">Mano de Obra</small>
+                        <span class="text-success fw-bold fs-5">${{ mecanico.neto_mano_obra|default:"0.00" }}</span>
+                    </div>
+                    <div class="col-6 text-end">
+                        <small class="text-muted d-block text-uppercase fw-bold small-font">Repuestos</small>
+                        <span class="text-primary fw-bold fs-5">${{ mecanico.neto_repuestos|default:"0.00" }}</span>
+                    </div>
+                    <div class="col-12 mt-2 pt-2 border-top">
+                        <small class="text-muted d-block text-uppercase fw-bold small-font">Total Neto Generado</small>
+                        <span class="text-dark fw-bold fs-3">${{ mecanico.neto_mano_obra|default:0|add:mecanico.neto_repuestos|default:0 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
     </div>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Nombre del Mecanico</th>
-                        <th>Servicios Asignados</th>
-                        <th>Total Generado ($)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for mecanico in mecanicos %}
-                    <tr>
-                        <td><strong>{{ mecanico.nombre }}</strong></td>
-                        <td>
-                            <span class="badge bg-primary rounded-pill">{{ mecanico.total_servicios }}</span>
-                        </td>
-                        <td>${{ mecanico.recaudacion_total|default:"0.00" }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="3" class="text-center py-4 text-muted">
-                            No hay datos suficientes para mostrar metricas.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+<style>
+    .small-font { font-size: 0.65rem; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputBusqueda = document.getElementById('filtroMecanico');
+    const selectOrden = document.getElementById('ordenMonto');
+    const items = document.querySelectorAll('.item-mecanico');
+    const cuerpoTabla = document.getElementById('cuerpoTabla');
+    const contenedorTarjetas = document.getElementById('contenedorTarjetas');
+
+    function filtrarYOrdenar() {
+        const busqueda = inputBusqueda.value.toLowerCase();
+        const orden = selectOrden.value;
+        let itemsArray = Array.from(items);
+
+        // 1. Filtrar
+        itemsArray.forEach(item => {
+            const nombre = item.getAttribute('data-nombre');
+            if (nombre.includes(busqueda)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        // 2. Ordenar (solo los visibles)
+        itemsArray.sort((a, b) => {
+            const totalA = parseFloat(a.getAttribute('data-total'));
+            const totalB = parseFloat(b.getAttribute('data-total'));
+            return orden === 'mayor' ? totalB - totalA : totalA - totalB;
+        });
+
+        // 3. Reordenar en el DOM
+        itemsArray.forEach(item => {
+            if (item.tagName === 'TR') cuerpoTabla.appendChild(item);
+            else contenedorTarjetas.appendChild(item);
+        });
+    }
+
+    inputBusqueda.addEventListener('input', filtrarYOrdenar);
+    selectOrden.addEventListener('change', filtrarYOrdenar);
+});
+</script>
 {% endblock %}

@@ -10,6 +10,7 @@
 
 <div class="row">
     <div class="col-md-8 col-12 mb-4">
+        
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-dark text-white">
                 <h5 class="mb-0">Información del Vehículo y Cliente</h5>
@@ -26,9 +27,6 @@
                         <p class="text-muted mb-1">Propietario</p>
                         <h5 class="mb-0">{{ servicio.auto.cliente.nombre }}</h5>
                         <p class="mb-0"><strong>Tel:</strong> {{ servicio.auto.cliente.telefono }}</p>
-                        {% if servicio.auto.cliente.email %}
-                            <p class="mb-0"><strong>Email:</strong> {{ servicio.auto.cliente.email }}</p>
-                        {% endif %}
                     </div>
                 </div>
                 <hr>
@@ -42,6 +40,63 @@
                         <p class="mb-0 fw-bold">{{ servicio.fecha_agenda|date:"d/m/Y" }} a las {{ servicio.hora_agenda|time:"H:i" }}</p>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">Repuestos Utilizados</h5>
+            </div>
+            <div class="card-body">
+                {% if error_stock %}
+                    <div class="alert alert-danger">{{ error_stock }}</div>
+                {% endif %}
+                
+                <div class="table-responsive mb-4">
+                    <table class="table table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Cantidad</th>
+                                <th>Repuesto</th>
+                                <th>Precio Unit.</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for detalle in servicio.refacciones_usadas.all %}
+                            <tr>
+                                <td>{{ detalle.cantidad }}x</td>
+                                <td>{{ detalle.refaccion.nombre }}</td>
+                                <td>${{ detalle.precio_unitario_neto }}</td>
+                                <td><strong>${% widthratio detalle.cantidad 1 detalle.precio_unitario_neto %}</strong></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-2">No se han asignado repuestos a este vehículo.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <hr>
+                
+                <form method="POST" class="row g-2 align-items-end">
+                    {% csrf_token %}
+                    <input type="hidden" name="agregar_refaccion" value="1">
+                    
+                    <div class="col-md-7">
+                        <label class="form-label small fw-bold">Seleccionar Refacción</label>
+                        {{ form_detalle.refaccion }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">Cantidad</label>
+                        {{ form_detalle.cantidad }}
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Agregar</button>
+                    </div>
+                </form>
             </div>
         </div>
 
